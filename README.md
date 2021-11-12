@@ -1,0 +1,2 @@
+# jitsi-standup
+run standup

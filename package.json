@@ -38,5 +38,8 @@
   },
   "devDependencies": {
     "gh-pages": "^2.2.0"
-  }
+  },
+  "main": "index.js",
+  "repository": "https://github.com/maxired/jitsi-standup.git",
+  "license": "MIT"
 }

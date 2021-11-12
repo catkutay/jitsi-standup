@@ -8,10 +8,11 @@ import { Audio } from './components/Audio';
 import useWindowSize from './hooks/useWindowSize'
 
 import qs from 'qs'
+import { withThemeCreator } from '@material-ui/styles';
 
 window.$  = $
-
-const connect = async ({ domain, room, config }) => {
+let UserName = 'serkan';
+const connect = async ({ domain, room, name, config }) => {
   const connectionConfig = Object.assign({}, config);
   let serviceUrl = connectionConfig.websocket || connectionConfig.bosh;
 
@@ -32,21 +33,21 @@ const connect = async ({ domain, room, config }) => {
   }) 
 }
 
-const join = async ({ connection, room }) => {
+const join = async ({ connection, room, name }) => {
   const conference = connection.initJitsiConference(room, {});
-
+  UserName = name;
   return new Promise(resolve => {
     conference.on(JitsiMeetJS.events.conference.CONFERENCE_JOINED, () => resolve(conference));
     conference.join();
   })
 }
 
-const connectandJoin = async ({ domain, room, config }) => {
+const connectandJoin = async ({ domain, room, name, config }) => {
 
-  const connection = await connect({ domain, room, config })
+  const connection = await connect({ domain, room, name, config })
   const localTracks = await JitsiMeetJS.createLocalTracks({ devices: ['video', 'audio'], facingMode: 'user'}, true);
 
-  const conference = await join({ connection, room })
+  const conference = await join({ connection, room, name })
   const localTrack = localTracks.find(track => track.getType() === 'video')
   conference.addTrack(localTrack)
   const localAudioTrack = localTracks.find(track => track.getType() === 'audio')
@@ -55,7 +56,7 @@ const connectandJoin = async ({ domain, room, config }) => {
   return { connection, conference, localTrack }
 }
 
-const loadAndConnect = ({ domain, room}) => {
+const loadAndConnect = ({ domain, room, name}) => {
 
     return new Promise(( resolve ) => {
       const script = document.createElement('script')
@@ -66,7 +67,7 @@ const loadAndConnect = ({ domain, room}) => {
         configScript.src = `https://${domain}/config.js`;
         document.querySelector('head').appendChild(configScript);
         configScript.onload = () => {
-          connectandJoin({ domain, room, config }).then(resolve)
+          connectandJoin({ domain, room, name, config }).then(resolve)
         }       
       };
 
@@ -102,6 +103,7 @@ const getDefaultParamsValue = () => {
   return {
     room: params.room ?? 'daily_standup',
     domain: params.domain ?? 'meet.jit.si',
+    name: params.name ?? 'name',
     autoJoin: params.autojoin ?? false,
   }
 }
@@ -114,6 +116,7 @@ function App() {
   const [mainState, setMainState] = useState('init')
   const [domain, setDomain] = useState(defaultParams.domain)
   const [room, setRoom] = useState(defaultParams.room)
+  const [name, setName] = useState(defaultParams.name)
   const [conference, setConference] = useState(null)
   const [videoTracks, addVideoTrack, removeVideoTrack] = useTracks();
   const [audioTracks, addAudioTrack, removeAudioTrack] = useTracks();
@@ -131,11 +134,11 @@ function App() {
   const connect = useCallback(async (e) => {
     e && e.preventDefault()
     setMainState('loading')
-    const { connection, conference, localTrack } = await loadAndConnect({ domain, room });
+    const { connection, conference, localTrack } = await loadAndConnect({ domain, room, name });
     setMainState('started')
     setConference(conference)
     addTrack(localTrack)
-  }, [addTrack, domain, room]);
+  }, [addTrack, domain, room, name]);
 
   useEffect(() => {
     if(!conference) return
@@ -155,7 +158,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        { mainState === 'init' && <ConnectForm connect={connect} domain={domain} room={room} setRoom={setRoom} setDomain={setDomain} /> }
+        { mainState === 'init' && <ConnectForm connect={connect} domain={domain} name={name} room={room} setRoom={setRoom} setDomain={setDomain} setName={setName} /> }
         { mainState === 'loading' && 'Loading' }
         { mainState === 'started' &&
         <div style={{
@@ -164,6 +167,9 @@ function App() {
           position: 'relative',
           borderRadius: '100%'
       }}>
+        <div>
+        {UserName}
+        </div>
         {
           videoTracks.map((track, index) => <Seat track={track} index={index} length={videoTracks.length} key={track.getId()} />)
         }
@@ -171,7 +177,6 @@ function App() {
           audioTracks.map((track, index) => <Audio track={track} index={index} key={track.getId()} />)
         }
        </div>}
-        
       </header>
     </div>
   );

@@ -12,5 +12,6 @@ export const Seat = ({ track, index, length }) => {
   
   return (<Circle size={seatSize} horizontal={horizontal} vertical={vertical}>
     <video height={seatSize} style={{ flexShrink: 0 }} autoPlay='1' key={`track_${track.getId()}`} ref={(ref) => ref && track.attach(ref)} />
+
   </Circle>);
 };

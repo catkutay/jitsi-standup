@@ -11,7 +11,7 @@ import qs from 'qs'
 import { withThemeCreator } from '@material-ui/styles';
 
 window.$  = $
-let UserName = 'serkan';
+let UserName = 'test';
 const connect = async ({ domain, room, name, config }) => {
   const connectionConfig = Object.assign({}, config);
   let serviceUrl = connectionConfig.websocket || connectionConfig.bosh;
@@ -167,11 +167,8 @@ function App() {
           position: 'relative',
           borderRadius: '100%'
       }}>
-        <div>
-        {UserName}
-        </div>
         {
-          videoTracks.map((track, index) => <Seat track={track} index={index} length={videoTracks.length} key={track.getId()} />)
+          videoTracks.map((track, index) => <Seat track={track} index={index} length={videoTracks.length} nameUser={UserName} key={track.getId()} />)
         }
         {
           audioTracks.map((track, index) => <Audio track={track} index={index} key={track.getId()} />)
